@@ -6,28 +6,26 @@ jobs:
   descarga:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write  # Esto le da permiso explícito de escritura
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Descargar de Airtable
         run: |
-          # Usamos tus secretos: AIRTABLE_CENSO (Base) y AIRTABLE_API (Token)
+          # Usamos tus secretos de la foto
           curl -v "https://api.airtable.com/v0/${{ secrets.AIRTABLE_CENSO }}/tblWiTUee1VWK9OZ2?output=csv" \
           -H "Authorization: Bearer ${{ secrets.AIRTABLE_API }}" \
           -o datos_censo.csv
           
-          echo "--- DATOS DESCARGADOS ---"
-          head -n 2 datos_censo.csv
+          echo "--- DATOS EN EL ARCHIVO ---"
+          cat datos_censo.csv
 
-      - name: Forzar Guardado
+      - name: Guardar cambios pase lo que pase
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add datos_censo.csv
-          # El '|| true' evita que el robot se detenga si no hay cambios
-          git commit -m "Actualización sincronizada: $(date)" || true
-          git push origin main
+          # Este comando pone la fecha y hora actual en el mensaje para forzar el cambio
+          git commit -m "Actualización Hacienda: $(date +'%Y-%m-%d %H:%M')" || exit 0
+          git push
