@@ -13,15 +13,12 @@ jobs:
 
       - name: Descargar de Airtable
         run: |
-          # Usamos el ID de la base y tabla que sacamos de tus fotos
-          # Forzamos a que si falla, el proceso se detenga (fail)
-          curl -f -v "https://api.airtable.com/v0/appqzHunqskWZJNc2/tblWiTUee1VWK9OZ2?output=csv" \
-          -H "Authorization: Bearer ${{ secrets.AIRTABLE_TOKEN }}" \
-          -o datos_censo.csv || echo "ERROR_DE_CONEXION"
-
-      - name: Verificar Contenido
-        run: |
-          echo "Lo que el robot ve en el archivo:"
+          # Aquí usamos los nombres exactos que tienes en tu foto de GitHub
+          curl -v "https://api.airtable.com/v0/${{ secrets.AIRTABLE_CENSO }}/tblWiTUee1VWK9OZ2?output=csv" \
+          -H "Authorization: Bearer ${{ secrets.AIRTABLE_API }}" \
+          -o datos_censo.csv
+          
+          echo "Verificando si bajaron datos..."
           cat datos_censo.csv
 
       - name: Guardar en GitHub
@@ -29,5 +26,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add datos_censo.csv
-          git commit -m "Actualización forzada con llaves nuevas" || exit 0
+          git commit -m "Descarga con nombres de secretos corregidos" || exit 0
           git push
