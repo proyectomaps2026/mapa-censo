@@ -15,7 +15,8 @@ jobs:
 
       - name: Descargar de Airtable
         run: |
-          curl -f -v "https://api.airtable.com/v0/${{ secrets.AIRTABLE_CENSO }}/tblWiTUee1VWK9OZ2?output=csv" \
+          # Usamos appqzHunqskWZJNc2 (Base) y tblWiTUee1VWK9OZ2 (Tabla)
+          curl -f -v "https://api.airtable.com/v0/appqzHunqskWZJNc2/tblWiTUee1VWK9OZ2?output=csv" \
           -H "Authorization: Bearer ${{ secrets.AIRTABLE_API }}" \
           -o datos_censo.csv
 
