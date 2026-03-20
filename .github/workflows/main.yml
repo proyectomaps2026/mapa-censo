@@ -11,18 +11,40 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Instalar Requests
-        run: pip install requests
-
-      - name: Ejecutar Script
+      - name: Ejecutar Proceso Completo
         env:
           AIRTABLE_API: ${{ secrets.AIRTABLE_API }}
-        run: python descargar_hacienda.py
+        run: |
+          pip install requests
+          python - <<EOF
+          import os, requests, csv
+          BASE_ID = "appqzHunqskWZJNc2"
+          TABLE_ID = "tblWiTUee1VWK9OZ2"
+          TOKEN = os.environ.get("AIRTABLE_API")
+          
+          url = f"https://api.airtable.com/v0/{BASE_ID}/{TABLE_ID}"
+          headers = {"Authorization": f"Bearer {TOKEN}"}
+          
+          response = requests.get(url, headers=headers)
+          data = response.json()
+          
+          if "records" in data:
+              filas = [r["fields"] for r in data["records"]]
+              if filas:
+                  columnas = filas[0].keys()
+                  with open("datos_censo.csv", "w", newline="", encoding="utf-8") as f:
+                      writer = csv.DictWriter(f, fieldnames=columnas)
+                      writer.writeheader()
+                      writer.writerows(filas)
+                  print("Archivo CSV creado con éxito")
+          else:
+              print("Error en Airtable:", data)
+          EOF
 
-      - name: Guardar Cambios
+      - name: Guardar en GitHub
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git add datos_censo.csv
-          git commit -m "Sincronización Hacienda" || exit 0
+          git commit -m "Sincronización Hacienda $(date +'%d-%m-%Y')" || exit 0
           git push
