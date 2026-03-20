@@ -19,7 +19,6 @@ jobs:
           python - <<EOF
           import os, requests, csv
           
-          # Configuracion
           token = os.environ.get("AIRTABLE_API")
           base_id = "appqzHunqskWZJNc2"
           table_id = "tblWiTUee1VWK9OZ2"
@@ -32,18 +31,21 @@ jobs:
           data = res.json()
           
           if "records" in data:
-              # Extraer solo los campos de Hacienda
               filas = [r["fields"] for r in data["records"]]
               if filas:
-                  # Obtener nombres de columnas
-                  columnas = filas[0].keys()
+                  # Recolectamos TODAS las columnas posibles de todos los registros
+                  columnas_totales = set()
+                  for f in filas:
+                      columnas_totales.update(f.keys())
+                  
+                  # Guardamos el CSV con todas las columnas encontradas
                   with open("datos_censo.csv", "w", newline="", encoding="utf-8") as f:
-                      writer = csv.DictWriter(f, fieldnames=columnas)
+                      writer = csv.DictWriter(f, fieldnames=list(columnas_totales))
                       writer.writeheader()
                       writer.writerows(filas)
-                  print("¡Archivo datos_censo.csv creado con exito!")
+                  print("¡Archivo datos_censo.csv creado con éxito!")
               else:
-                  print("La tabla esta vacia.")
+                  print("La tabla está vacía.")
           else:
               print("Error de Airtable:", data)
           EOF
@@ -53,5 +55,5 @@ jobs:
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git add datos_censo.csv
-          git commit -m "Sincronizacion Hacienda $(date +'%d-%m-%Y %H:%M')" || exit 0
+          git commit -m "Sincronización Hacienda Final" || exit 0
           git push
