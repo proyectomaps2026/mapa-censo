@@ -1,0 +1,27 @@
+name: Actualizar CSV de Airtable
+on:
+  schedule:
+    # Estas horas están ajustadas a Venezuela (UTC-4)
+    - cron: '30 12,17,20 * * *' 
+  workflow_dispatch: # Esto activa el botón para actualizar a mano
+
+jobs:
+  descarga:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v3
+
+      - name: Descargar datos de Airtable
+        run: |
+          curl -v "https://api.airtable.com/v0/${{ secrets.AIRTABLE_BASE_ID }}/CF_ID_REF?output=csv" \
+          -H "Authorization: Bearer ${{ secrets.AIRTABLE_TOKEN }}" \
+          -o datos_censo.csv
+
+      - name: Subir a GitHub
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add datos_censo.csv
+          git commit -m "Actualización automática de censo" || exit 0
+          git push
