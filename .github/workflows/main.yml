@@ -13,19 +13,18 @@ jobs:
         with:
           persist-credentials: true
 
-      - name: Descargar CSV Real
+      - name: Descarga Directa CSV
         run: |
-          # Agregamos /export/csv al final de la URL para que Airtable convierta los datos
-          curl -v -L "https://api.airtable.com/v0/appqzHunqskWZJNc2/tblWiTUee1VWK9OZ2?api_key=${{ secrets.AIRTABLE_API }}&output=csv" \
-          -H "Authorization: Bearer ${{ secrets.AIRTABLE_API }}" \
-          -o datos_censo.csv
+          # Reemplaza la URL de abajo por el link de "Share View CSV" que copiaste
+          curl -L "https://airtable.com/appqzHunqskWZJNc2/shrq94WGojXDV5QcH/tblQ4mQxkyr4FiRCG/viwEuflXQ6tL2nCDx" -o datos_censo.csv
           
-          echo "# Sincronizado: $(date +'%Y-%m-%d %H:%M:%S')" >> datos_censo.csv
+          # Marca de tiempo para forzar la actualización
+          echo "# Ultima sincronizacion: $(date +'%d-%m-%Y %H:%M:%S')" >> datos_censo.csv
 
       - name: Guardar en GitHub
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add datos_censo.csv
-          git commit -m "Datos Hacienda en CSV: $(date +'%d-%m-%Y %H:%M')" || exit 0
+          git commit -m "Sincronizacion Final: $(date +'%d-%m-%Y %H:%M')" || exit 0
           git push origin main
