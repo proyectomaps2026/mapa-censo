@@ -1,4 +1,4 @@
-name: Actualizar CSV de Airtable
+name: Actualizar CSV de Hacienda
 on:
   workflow_dispatch: 
 
@@ -6,26 +6,23 @@ jobs:
   descarga:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Esto le da permiso explícito de escritura
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: true
 
       - name: Descargar de Airtable
         run: |
-          # Usamos tus secretos de la foto
           curl -v "https://api.airtable.com/v0/${{ secrets.AIRTABLE_CENSO }}/tblWiTUee1VWK9OZ2?output=csv" \
           -H "Authorization: Bearer ${{ secrets.AIRTABLE_API }}" \
           -o datos_censo.csv
-          
-          echo "--- DATOS EN EL ARCHIVO ---"
-          cat datos_censo.csv
 
-      - name: Guardar cambios pase lo que pase
+      - name: Guardar cambios
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           git add datos_censo.csv
-          # Este comando pone la fecha y hora actual en el mensaje para forzar el cambio
-          git commit -m "Actualización Hacienda: $(date +'%Y-%m-%d %H:%M')" || exit 0
-          git push
+          git commit -m "Sincronización: $(date +'%d-%m-%Y %H:%M')" || exit 0
+          git push origin main
