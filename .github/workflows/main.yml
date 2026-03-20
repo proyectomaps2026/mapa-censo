@@ -10,24 +10,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Configurar Python
-        uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          persist-credentials: true
 
-      - name: Instalar librerias
-        run: pip install requests pandas
+      - name: Descargar Directo
+        run: |
+          # Descarga el CSV usando tu Token y IDs exactos
+          curl -v -L "https://api.airtable.com/v0/appqzHunqskWZJNc2/tblWiTUee1VWK9OZ2?api_key=${{ secrets.AIRTABLE_API }}&output=csv" \
+          -o datos_censo.csv
+          
+          # Verifica si el archivo tiene datos o error
+          cat datos_censo.csv
 
-      - name: Ejecutar descarga
-        env:
-          AIRTABLE_API: ${{ secrets.AIRTABLE_API }}
-        run: python descargar.py
-
-      - name: Guardar cambios
+      - name: Guardar en GitHub
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add datos_censo.csv
-          git commit -m "Sincronización Hacienda: $(date +'%d-%m-%Y %H:%M')" || exit 0
+          git commit -m "Sincronización: $(date +'%d-%m-%Y %H:%M')" || exit 0
           git push origin main
