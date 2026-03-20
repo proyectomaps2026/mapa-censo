@@ -13,20 +13,20 @@ jobs:
         with:
           persist-credentials: true
 
-      - name: Descargar Directo
+      - name: Descargar con Token Bearer
         run: |
-          # Descargamos los datos de Airtable
-          curl -v -L "https://api.airtable.com/v0/appqzHunqskWZJNc2/tblWiTUee1VWK9OZ2?api_key=${{ secrets.AIRTABLE_API }}&output=csv" \
+          # Esta es la forma correcta de enviar el token 'pat...'
+          curl -v -L "https://api.airtable.com/v0/appqzHunqskWZJNc2/tblWiTUee1VWK9OZ2?output=csv" \
+          -H "Authorization: Bearer ${{ secrets.AIRTABLE_API }}" \
           -o datos_censo.csv
           
-          # TRUCO: Añadimos un comentario invisible al final con la fecha para que GitHub vea un cambio real
-          echo "# Actualizado: $(date +'%Y-%m-%d %H:%M:%S')" >> datos_censo.csv
+          # Añadimos marca de tiempo para forzar el cambio en GitHub
+          echo "# Sincronizado: $(date +'%Y-%m-%d %H:%M:%S')" >> datos_censo.csv
 
       - name: Guardar en GitHub
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add datos_censo.csv
-          # Forzamos el commit con la fecha actual
-          git commit -m "Sincronización Hacienda: $(date +'%d-%m-%Y %H:%M')" || exit 0
+          git commit -m "Datos Hacienda Actualizados: $(date +'%d-%m-%Y %H:%M')" || exit 0
           git push origin main
