@@ -13,14 +13,13 @@ jobs:
         with:
           persist-credentials: true
 
-      - name: Descargar con Token Bearer
+      - name: Descargar CSV Real
         run: |
-          # Esta es la forma correcta de enviar el token 'pat...'
-          curl -v -L "https://api.airtable.com/v0/appqzHunqskWZJNc2/tblWiTUee1VWK9OZ2?output=csv" \
+          # Agregamos /export/csv al final de la URL para que Airtable convierta los datos
+          curl -v -L "https://api.airtable.com/v0/appqzHunqskWZJNc2/tblWiTUee1VWK9OZ2?api_key=${{ secrets.AIRTABLE_API }}&output=csv" \
           -H "Authorization: Bearer ${{ secrets.AIRTABLE_API }}" \
           -o datos_censo.csv
           
-          # Añadimos marca de tiempo para forzar el cambio en GitHub
           echo "# Sincronizado: $(date +'%Y-%m-%d %H:%M:%S')" >> datos_censo.csv
 
       - name: Guardar en GitHub
@@ -28,5 +27,5 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add datos_censo.csv
-          git commit -m "Datos Hacienda Actualizados: $(date +'%d-%m-%Y %H:%M')" || exit 0
+          git commit -m "Datos Hacienda en CSV: $(date +'%d-%m-%Y %H:%M')" || exit 0
           git push origin main
