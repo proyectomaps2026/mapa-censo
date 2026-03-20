@@ -1,7 +1,5 @@
 name: Actualizar CSV de Airtable
 on:
-  schedule:
-    - cron: '30 12,17,20 * * *' 
   workflow_dispatch: 
 
 jobs:
@@ -12,21 +10,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Descargar de Airtable
         run: |
-          # Usamos AIRTABLE_CENSO para la base y AIRTABLE_API para el Token
+          # Usamos tus secretos: AIRTABLE_CENSO (Base) y AIRTABLE_API (Token)
           curl -v "https://api.airtable.com/v0/${{ secrets.AIRTABLE_CENSO }}/tblWiTUee1VWK9OZ2?output=csv" \
           -H "Authorization: Bearer ${{ secrets.AIRTABLE_API }}" \
           -o datos_censo.csv
           
-          echo "--- VERIFICANDO DATOS ---"
-          head -n 5 datos_censo.csv
+          echo "--- DATOS DESCARGADOS ---"
+          head -n 2 datos_censo.csv
 
-      - name: Guardar en GitHub
+      - name: Forzar Guardado
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add datos_censo.csv
-          git commit -m "Actualización con nombres de secretos de la foto" || exit 0
-          git push
+          # El '|| true' evita que el robot se detenga si no hay cambios
+          git commit -m "Actualización sincronizada: $(date)" || true
+          git push origin main
