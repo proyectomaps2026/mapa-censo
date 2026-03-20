@@ -11,12 +11,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configurar Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-
-      - name: Instalar Librerias
+      - name: Instalar Requests
         run: pip install requests
 
       - name: Ejecutar Script
@@ -26,8 +21,8 @@ jobs:
 
       - name: Guardar Cambios
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
           git add datos_censo.csv
-          git commit -m "Sincronización Hacienda: $(date +'%d-%m-%Y %H:%M')" || exit 0
-          git push origin main
+          git commit -m "Sincronización Hacienda" || exit 0
+          git push
