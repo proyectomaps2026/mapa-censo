@@ -15,7 +15,7 @@ jobs:
 
       - name: Descargar de Airtable
         run: |
-          curl -v "https://api.airtable.com/v0/${{ secrets.AIRTABLE_CENSO }}/tblWiTUee1VWK9OZ2?output=csv" \
+          curl -f -v "https://api.airtable.com/v0/${{ secrets.AIRTABLE_CENSO }}/tblWiTUee1VWK9OZ2?output=csv" \
           -H "Authorization: Bearer ${{ secrets.AIRTABLE_API }}" \
           -o datos_censo.csv
 
@@ -24,5 +24,5 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add datos_censo.csv
-          git commit -m "Sincronización: $(date +'%d-%m-%Y %H:%M')" || exit 0
+          git commit -m "Sincronización Hacienda: $(date +'%d-%m-%Y %H:%M')" || exit 0
           git push origin main
