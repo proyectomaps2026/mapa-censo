@@ -10,15 +10,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          persist-credentials: true
 
-      - name: Descargar de Airtable
-        run: |
-          # Usamos appqzHunqskWZJNc2 (Base) y tblWiTUee1VWK9OZ2 (Tabla)
-          curl -f -v "https://api.airtable.com/v0/appqzHunqskWZJNc2/tblWiTUee1VWK9OZ2?output=csv" \
-          -H "Authorization: Bearer ${{ secrets.AIRTABLE_API }}" \
-          -o datos_censo.csv
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Instalar librerias
+        run: pip install requests pandas
+
+      - name: Ejecutar descarga
+        env:
+          AIRTABLE_API: ${{ secrets.AIRTABLE_API }}
+        run: python descargar.py
 
       - name: Guardar cambios
         run: |
