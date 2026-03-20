@@ -1,9 +1,8 @@
 name: Actualizar CSV de Airtable
 on:
   schedule:
-    # Ajustado a horario de oficina Venezuela (8:30 AM, 1:30 PM, 4:30 PM)
     - cron: '30 12,17,20 * * *' 
-  workflow_dispatch: # Botón para actualizar a mano
+  workflow_dispatch: 
 
 jobs:
   descarga:
@@ -16,7 +15,7 @@ jobs:
 
       - name: Descargar datos de Airtable
         run: |
-          curl -v "https://api.airtable.com/v0/${{ secrets.AIRTABLE_BASE_ID }}/control%20de%20duplicados?output=csv" \
+          curl -v "https://api.airtable.com/v0/${{ secrets.AIRTABLE_BASE_ID }}/tblWiTUee1VWK9OZ2?output=csv" \
           -H "Authorization: Bearer ${{ secrets.AIRTABLE_TOKEN }}" \
           -o datos_censo.csv
 
@@ -25,5 +24,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add datos_censo.csv
-          git commit -m "Actualización automática de censo" || exit 0
+          git commit -m "Actualización por ID de tabla" || exit 0
           git push
