@@ -1,5 +1,7 @@
 name: Actualizar CSV de Airtable
 on:
+  schedule:
+    - cron: '30 12,17,20 * * *' 
   workflow_dispatch: 
 
 jobs:
@@ -13,18 +15,18 @@ jobs:
 
       - name: Descargar de Airtable
         run: |
-          # Aquí usamos los nombres exactos que tienes en tu foto de GitHub
+          # Usamos AIRTABLE_CENSO para la base y AIRTABLE_API para el Token
           curl -v "https://api.airtable.com/v0/${{ secrets.AIRTABLE_CENSO }}/tblWiTUee1VWK9OZ2?output=csv" \
           -H "Authorization: Bearer ${{ secrets.AIRTABLE_API }}" \
           -o datos_censo.csv
           
-          echo "Verificando si bajaron datos..."
-          cat datos_censo.csv
+          echo "--- VERIFICANDO DATOS ---"
+          head -n 5 datos_censo.csv
 
       - name: Guardar en GitHub
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add datos_censo.csv
-          git commit -m "Descarga con nombres de secretos corregidos" || exit 0
+          git commit -m "Actualización con nombres de secretos de la foto" || exit 0
           git push
