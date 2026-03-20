@@ -15,14 +15,18 @@ jobs:
 
       - name: Descargar datos de Airtable
         run: |
+          # El ID de tu tabla es tblWiTUee1VWK9OZ2 según tu foto
           curl -v "https://api.airtable.com/v0/${{ secrets.AIRTABLE_BASE_ID }}/tblWiTUee1VWK9OZ2?output=csv" \
           -H "Authorization: Bearer ${{ secrets.AIRTABLE_TOKEN }}" \
           -o datos_censo.csv
+          
+          # Esto nos dirá en el log si el archivo se bajó vacío
+          ls -lh datos_censo.csv
 
       - name: Guardar cambios en GitHub
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add datos_censo.csv
-          git commit -m "Actualización por ID de tabla" || exit 0
+          git commit -m "Forzando actualizacion de datos $(date)" || exit 0
           git push
