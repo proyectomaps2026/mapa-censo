@@ -11,34 +11,41 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Ejecutar Proceso Completo
+      - name: Descargar y Convertir Datos
         env:
           AIRTABLE_API: ${{ secrets.AIRTABLE_API }}
         run: |
           pip install requests
           python - <<EOF
           import os, requests, csv
-          BASE_ID = "appqzHunqskWZJNc2"
-          TABLE_ID = "tblWiTUee1VWK9OZ2"
-          TOKEN = os.environ.get("AIRTABLE_API")
           
-          url = f"https://api.airtable.com/v0/{BASE_ID}/{TABLE_ID}"
-          headers = {"Authorization": f"Bearer {TOKEN}"}
+          # Configuracion
+          token = os.environ.get("AIRTABLE_API")
+          base_id = "appqzHunqskWZJNc2"
+          table_id = "tblWiTUee1VWK9OZ2"
           
-          response = requests.get(url, headers=headers)
-          data = response.json()
+          url = f"https://api.airtable.com/v0/{base_id}/{table_id}"
+          headers = {"Authorization": f"Bearer {token}"}
+          
+          print("Conectando con Airtable...")
+          res = requests.get(url, headers=headers)
+          data = res.json()
           
           if "records" in data:
+              # Extraer solo los campos de Hacienda
               filas = [r["fields"] for r in data["records"]]
               if filas:
+                  # Obtener nombres de columnas
                   columnas = filas[0].keys()
                   with open("datos_censo.csv", "w", newline="", encoding="utf-8") as f:
                       writer = csv.DictWriter(f, fieldnames=columnas)
                       writer.writeheader()
                       writer.writerows(filas)
-                  print("Archivo CSV creado con éxito")
+                  print("¡Archivo datos_censo.csv creado con exito!")
+              else:
+                  print("La tabla esta vacia.")
           else:
-              print("Error en Airtable:", data)
+              print("Error de Airtable:", data)
           EOF
 
       - name: Guardar en GitHub
@@ -46,5 +53,5 @@ jobs:
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git add datos_censo.csv
-          git commit -m "Sincronización Hacienda $(date +'%d-%m-%Y')" || exit 0
+          git commit -m "Sincronizacion Hacienda $(date +'%d-%m-%Y %H:%M')" || exit 0
           git push
