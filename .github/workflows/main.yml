@@ -10,23 +10,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
         with:
-          persist-credentials: true
+          python-version: '3.x'
 
-      - name: Descargar CSV Real
-        run: |
-          # Usamos el formato de URL que Airtable reconoce para CSV
-          curl -v -L "https://api.airtable.com/v0/appqzHunqskWZJNc2/tblWiTUee1VWK9OZ2?api_key=${{ secrets.AIRTABLE_API }}&output=csv" \
-          -H "Authorization: Bearer ${{ secrets.AIRTABLE_API }}" \
-          -o datos_censo.csv
-          
-          # Forzamos marca de tiempo
-          echo "# Sync: $(date +'%Y-%m-%d %H:%M:%S')" >> datos_censo.csv
+      - name: Instalar Librerias
+        run: pip install requests
 
-      - name: Guardar en GitHub
+      - name: Ejecutar Script
+        env:
+          AIRTABLE_API: ${{ secrets.AIRTABLE_API }}
+        run: python descargar_hacienda.py
+
+      - name: Guardar Cambios
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add datos_censo.csv
-          git commit -m "CSV Hacienda Actualizado: $(date +'%d-%m-%Y %H:%M')" || exit 0
+          git commit -m "Sincronización Hacienda: $(date +'%d-%m-%Y %H:%M')" || exit 0
           git push origin main
