@@ -26,28 +26,48 @@ jobs:
           url = f"https://api.airtable.com/v0/{base_id}/{table_id}"
           headers = {"Authorization": f"Bearer {token}"}
           
-          print("Conectando con Airtable...")
           res = requests.get(url, headers=headers)
           data = res.json()
           
           if "records" in data:
-              filas = [r["fields"] for r in data["records"]]
-              if filas:
-                  # Recolectamos TODAS las columnas posibles de todos los registros
-                  columnas_totales = set()
-                  for f in filas:
-                      columnas_totales.update(f.keys())
+              filas_limpias = []
+              for r in data["records"]:
+                  f = r["fields"]
                   
-                  # Guardamos el CSV con todas las columnas encontradas
-                  with open("datos_censo.csv", "w", newline="", encoding="utf-8") as f:
-                      writer = csv.DictWriter(f, fieldnames=list(columnas_totales))
+                  # 1. ARREGLO DE FOTOS (Para que My Maps las abra)
+                  # Buscamos el link de la fachada y lo ponemos en una columna llamada "Foto"
+                  link_foto = ""
+                  if "Foto Fachada" in f and isinstance(f["Foto Fachada"], list):
+                      link_foto = f["Foto Fachada"][0].get("url", "")
+                  elif "Foto Fachada" in f:
+                      link_foto = f["Foto Fachada"]
+                  
+                  # 2. ARREGLO DE FISCAL (Limpiar los ['rec...'])
+                  fiscal = f.get("Fiscal Responsable", "")
+                  if isinstance(fiscal, list):
+                      fiscal = fiscal[0] # Tomamos solo el primer nombre si es una lista
+                  
+                  # 3. CREAMOS LA FILA CON EL ORDEN QUE QUEREMOS
+                  nueva_fila = {
+                      "Razón Social": f.get("Razón Social", "Sin Nombre"),
+                      "Foto": link_foto,
+                      "Estatus Licencia": f.get("Estatus Licencia", ""),
+                      "Licencia": f.get("Licencia Act. Econ.", ""),
+                      "Fiscal": fiscal,
+                      "Vence": f.get("Fecha Vencimiento", ""),
+                      "Cita": f.get("Próxima Cita", ""),
+                      "Dirección": f.get("Dirección", ""),
+                      "Coordenadas": f.get("Coordenadas", "")
+                  }
+                  filas_limpias.append(nueva_fila)
+
+              if filas_limpias:
+                  columnas = list(filas_limpias[0].keys())
+                  with open("datos_censo.csv", "w", newline="", encoding="utf-8") as f_out:
+                      writer = csv.DictWriter(f_out, fieldnames=columnas)
                       writer.writeheader()
-                      writer.writerows(filas)
-                  print("¡Archivo datos_censo.csv creado con éxito!")
-              else:
-                  print("La tabla está vacía.")
-          else:
-              print("Error de Airtable:", data)
+                      writer.writerows(filas_limpias)
+                  print("¡CSV Limpio y Ordenado creado con éxito!")
           EOF
 
       - name: Guardar en GitHub
@@ -55,5 +75,5 @@ jobs:
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git add datos_censo.csv
-          git commit -m "Sincronización Hacienda Final" || exit 0
+          git commit -m "Sincronización Hacienda - Limpieza de Fotos y Fiscales" || exit 0
           git push
