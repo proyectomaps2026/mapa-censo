@@ -23,8 +23,7 @@ jobs:
           base_id = "appqzHunqskWZJNc2"
           table_id = "tblWiTUee1VWK9OZ2"
           
-          # Ajuste 1: Forzamos a Airtable a mandar strings (Nombres y Fechas limpias)
-          url = f"https://api.airtable.com/v0/{base_id}/{table_id}?cellFormat=string&userLocale=es"
+          url = f"https://api.airtable.com/v0/{base_id}/{table_id}"
           headers = {"Authorization": f"Bearer {token}"}
           
           print("Conectando con Airtable...")
@@ -32,41 +31,28 @@ jobs:
           data = res.json()
           
           if "records" in data:
-              filas = []
-              for r in data["records"]:
-                  f = r["fields"].copy()
-                  
-                  # Ajuste 2: Creamos la columna 'Foto' para My Maps sin borrar la original
-                  if "Foto Fachada" in f:
-                      # Si viene como lista sacamos el URL, si no, tomamos el texto
-                      if isinstance(f["Foto Fachada"], list) and len(f["Foto Fachada"]) > 0:
-                          f["Foto"] = f["Foto Fachada"][0].get("url", "")
-                      else:
-                          f["Foto"] = f["Foto Fachada"]
-                  
-                  filas.append(f)
-
+              filas = [r["fields"] for r in data["records"]]
               if filas:
-                  # Seguimos recolectando TODAS las columnas (incluyendo las futuras Visitas)
+                  # Recolectamos TODAS las columnas posibles de todos los registros
                   columnas_totales = set()
                   for f in filas:
                       columnas_totales.update(f.keys())
                   
-                  with open("datos_censo.csv", "w", newline="", encoding="utf-8") as f_out:
-                      writer = csv.DictWriter(f_out, fieldnames=list(columnas_totales))
+                  # Guardamos el CSV con todas las columnas encontradas
+                  with open("datos_censo.csv", "w", newline="", encoding="utf-8") as f:
+                      writer = csv.DictWriter(f, fieldnames=list(columnas_totales))
                       writer.writeheader()
                       writer.writerows(filas)
-                  print("¡Archivo datos_censo.csv actualizado con éxito!")
+                  print("¡Archivo datos_censo.csv creado con éxito!")
               else:
                   print("La tabla está vacía.")
           else:
               print("Error de Airtable:", data)
           EOF
-
       - name: Guardar en GitHub
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git add datos_censo.csv
-          git commit -m "Sincronización Hacienda - Corrección Fiscal, Foto y Fechas" || exit 0
+          git commit -m "Sincronización Hacienda Final" || exit 0
           git push
