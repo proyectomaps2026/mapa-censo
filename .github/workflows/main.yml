@@ -23,8 +23,8 @@ jobs:
           base_id = "appqzHunqskWZJNc2"
           table_id = "tblWiTUee1VWK9OZ2"
           
-          # Usamos userLocale=true para que Airtable intente mandar nombres en vez de IDs
-          url = f"https://api.airtable.com/v0/{base_id}/{table_id}?cellFormat=string&userLocale=en"
+          # Ajuste 1: Forzamos a Airtable a mandar strings (Nombres y Fechas limpias)
+          url = f"https://api.airtable.com/v0/{base_id}/{table_id}?cellFormat=string&userLocale=es"
           headers = {"Authorization": f"Bearer {token}"}
           
           print("Conectando con Airtable...")
@@ -34,43 +34,31 @@ jobs:
           if "records" in data:
               filas = []
               for r in data["records"]:
-                  f = r["fields"].copy() # Copiamos TODO lo que viene de Airtable
+                  f = r["fields"].copy()
                   
-                  # 1. ARREGLO DE FOTO (Creamos una copia que se llame solo 'Foto')
-                  # Buscamos el link de la fachada y lo ponemos en 'Foto'
+                  # Ajuste 2: Creamos la columna 'Foto' para My Maps sin borrar la original
                   if "Foto Fachada" in f:
-                      # Si es una lista (formato Airtable), sacamos el URL
+                      # Si viene como lista sacamos el URL, si no, tomamos el texto
                       if isinstance(f["Foto Fachada"], list) and len(f["Foto Fachada"]) > 0:
                           f["Foto"] = f["Foto Fachada"][0].get("url", "")
                       else:
                           f["Foto"] = f["Foto Fachada"]
-
-                  # 2. ARREGLO DE FISCAL (Limpieza de corchetes y códigos)
-                  if "Fiscal Responsable" in f:
-                      fiscal = f["Fiscal Responsable"]
-                      if isinstance(fiscal, list):
-                          f["Fiscal Responsable"] = fiscal[0]
                   
                   filas.append(f)
 
               if filas:
-                  # Recolectamos todas las columnas para no perder nada
+                  # Seguimos recolectando TODAS las columnas (incluyendo las futuras Visitas)
                   columnas_totales = set()
                   for f in filas:
                       columnas_totales.update(f.keys())
                   
-                  # Ponemos 'Razón Social' y 'Foto' al principio para que My Maps las vea primero
-                  cols = list(columnas_totales)
-                  if "Razón Social" in cols:
-                      cols.insert(0, cols.pop(cols.index("Razón Social")))
-                  if "Foto" in cols:
-                      cols.insert(1, cols.pop(cols.index("Foto")))
-
                   with open("datos_censo.csv", "w", newline="", encoding="utf-8") as f_out:
-                      writer = csv.DictWriter(f_out, fieldnames=cols)
+                      writer = csv.DictWriter(f_out, fieldnames=list(columnas_totales))
                       writer.writeheader()
                       writer.writerows(filas)
                   print("¡Archivo datos_censo.csv actualizado con éxito!")
+              else:
+                  print("La tabla está vacía.")
           else:
               print("Error de Airtable:", data)
           EOF
@@ -80,5 +68,5 @@ jobs:
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git add datos_censo.csv
-          git commit -m "Sincronización Hacienda - Corrección Fiscal y Foto" || exit 0
+          git commit -m "Sincronización Hacienda - Corrección Fiscal, Foto y Fechas" || exit 0
           git push
