@@ -1,6 +1,10 @@
 name: Actualizar CSV de Hacienda
 on:
   workflow_dispatch: 
+  schedule:
+    # Corre cada 2 horas (00 min) desde las 11:00 hasta las 21:00 UTC
+    # En Venezuela esto es: 7AM, 9AM, 11AM, 1PM, 3PM, 5PM (Lun-Vie)
+    - cron: '0 11-21/2 * * 1-5'
 
 jobs:
   descarga:
@@ -33,25 +37,28 @@ jobs:
           if "records" in data:
               filas = [r["fields"] for r in data["records"]]
               if filas:
-                  # Recolectamos TODAS las columnas posibles de todos los registros
                   columnas_totales = set()
                   for f in filas:
                       columnas_totales.update(f.keys())
                   
-                  # Guardamos el CSV con todas las columnas encontradas
                   with open("datos_censo.csv", "w", newline="", encoding="utf-8") as f:
                       writer = csv.DictWriter(f, fieldnames=list(columnas_totales))
                       writer.writeheader()
                       writer.writerows(filas)
-                  print("¡Archivo datos_censo.csv creado con éxito!")
+                  print("¡Archivo datos_censo.csv actualizado!")
               else:
                   print("La tabla está vacía.")
           else:
               print("Error de Airtable:", data)
           EOF
+
       - name: Guardar en GitHub
         run: |
           git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add datos_censo.csv
+          # Solo guarda si hubo cambios reales para no llenar el historial de basura
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Sincronización Hacienda Intercalada" && git push)
           git config --local user.name "GitHub Actions"
           git add datos_censo.csv
           git commit -m "Sincronización Hacienda Final" || exit 0
