@@ -1,8 +1,7 @@
 name: Actualizar CSV de Hacienda
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
   schedule:
-    # 7AM, 9AM, 11AM, 1PM, 3PM, 5PM (Vzla)
     - cron: '0 11-21/2 * * 1-5'
 
 jobs:
@@ -21,17 +20,13 @@ jobs:
           pip install requests
           python - <<EOF
           import os, requests, csv
-          
           token = os.environ.get("AIRTABLE_API")
           base_id = "appqzHunqskWZJNc2"
           table_id = "tblWiTUee1VWK9OZ2"
-          
           url = f"https://api.airtable.com/v0/{base_id}/{table_id}"
           headers = {"Authorization": f"Bearer {token}"}
-          
           res = requests.get(url, headers=headers)
           data = res.json()
-          
           if "records" in data:
               filas = [r["fields"] for r in data["records"]]
               if filas:
@@ -43,7 +38,7 @@ jobs:
                       writer.writerows(filas)
                   print("CSV Actualizado")
           else:
-              print("Error:", data)
+              print("Error Airtable:", data)
           EOF
 
       - name: Guardar en GitHub
@@ -51,5 +46,5 @@ jobs:
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git add datos_censo.csv
-          git commit -m "Sincronizacion automatica" || exit 0
+          git commit -m "Sincronizacion Hacienda Intercalada" || exit 0
           git push
