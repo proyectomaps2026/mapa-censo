@@ -2,8 +2,7 @@ name: Actualizar CSV de Hacienda
 on:
   workflow_dispatch: 
   schedule:
-    # Corre cada 2 horas (00 min) desde las 11:00 hasta las 21:00 UTC
-    # En Venezuela esto es: 7AM, 9AM, 11AM, 1PM, 3PM, 5PM (Lun-Vie)
+    # 7AM, 9AM, 11AM, 1PM, 3PM, 5PM (Vzla)
     - cron: '0 11-21/2 * * 1-5'
 
 jobs:
@@ -30,26 +29,21 @@ jobs:
           url = f"https://api.airtable.com/v0/{base_id}/{table_id}"
           headers = {"Authorization": f"Bearer {token}"}
           
-          print("Conectando con Airtable...")
           res = requests.get(url, headers=headers)
           data = res.json()
           
           if "records" in data:
               filas = [r["fields"] for r in data["records"]]
               if filas:
-                  columnas_totales = set()
-                  for f in filas:
-                      columnas_totales.update(f.keys())
-                  
+                  columnas = set()
+                  for f in filas: columnas.update(f.keys())
                   with open("datos_censo.csv", "w", newline="", encoding="utf-8") as f:
-                      writer = csv.DictWriter(f, fieldnames=list(columnas_totales))
+                      writer = csv.DictWriter(f, fieldnames=list(columnas))
                       writer.writeheader()
                       writer.writerows(filas)
-                  print("¡Archivo datos_censo.csv actualizado!")
-              else:
-                  print("La tabla está vacía.")
+                  print("CSV Actualizado")
           else:
-              print("Error de Airtable:", data)
+              print("Error:", data)
           EOF
 
       - name: Guardar en GitHub
@@ -57,9 +51,5 @@ jobs:
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git add datos_censo.csv
-          # Solo guarda si hubo cambios reales para no llenar el historial de basura
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Sincronización Hacienda Intercalada" && git push)
-          git config --local user.name "GitHub Actions"
-          git add datos_censo.csv
-          git commit -m "Sincronización Hacienda Final" || exit 0
+          git commit -m "Sincronizacion automatica" || exit 0
           git push
