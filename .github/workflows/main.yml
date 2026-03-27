@@ -13,7 +13,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Descargar y Convertir Datos
+      - name: Descargar de Airtable
         env:
           AIRTABLE_API: ${{ secrets.AIRTABLE_API }}
         run: |
@@ -28,7 +28,7 @@ jobs:
           res = requests.get(url, headers=headers)
           data = res.json()
           if "records" in data:
-              filas = [r["fields"] for r in data["records"]]
+              filas = [r["fields"] for r in data.get("records", [])]
               if filas:
                   columnas = set()
                   for f in filas: columnas.update(f.keys())
@@ -36,15 +36,16 @@ jobs:
                       writer = csv.DictWriter(f, fieldnames=list(columnas))
                       writer.writeheader()
                       writer.writerows(filas)
-                  print("CSV Actualizado")
+                  print("Archivo generado localmente")
           else:
-              print("Error Airtable:", data)
+              print("Error en data:", data)
+              exit(1)
           EOF
 
-      - name: Guardar en GitHub
+      - name: Forzar Guardado en GitHub
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git add datos_censo.csv
-          git commit -m "Sincronizacion Hacienda Intercalada" || exit 0
+          git commit -m "Sincronizacion Forzada Hacienda" || echo "Sin cambios"
           git push
